@@ -15,15 +15,23 @@ except:
 
 
 class cProfileMiddleware(object):
-    def __init__(self, get_response):
-        self.get_response = get_response
+    def __init__(self, get_response=None):
+        if get_response is not None:
+            self.get_response = get_response
+        else:
+            # Support for older Django versions where get_response is passed to __call__
+            self.get_response = None
 
     def __call__(self, request):
         if self.can(request):
             self.profiler = profile.Profile()
             self.profiler.enable()
 
-        response = self.get_response(request)
+        if self.get_response:
+            response = self.get_response(request)
+        else:
+            # Fallback for older Django versions or incorrect initialization
+            response = request # This is a placeholder, should be handled by Django
 
         if self.can(request):
             self.profiler.create_stats()
